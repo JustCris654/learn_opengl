@@ -1,0 +1,9 @@
+{
+    "version": 4,
+    "vendor": {
+        "conan": {}
+    },
+    "include": [
+        "/home/justcris/Documents/cpp/opengl_conan/build/CMakePresets.json"
+    ]
+}
