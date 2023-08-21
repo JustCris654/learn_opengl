@@ -178,11 +178,22 @@ int main() {
     // buffer data
     // configure vertex attributes
 
-    float vertices[] = {-0.5f, -0.5f, 0.f, 0.5f, -0.5f, 0.f, 0.5f, 0.5f, 0.f};
+    float vertices[] = {
+        0.5f,  0.5f,  0.f, // top right
+        0.5f,  -0.5f, 0.f, // bottom right
+        -0.5f, -0.5f, 0.f, // bottom left
+        -0.5f, 0.5f,  0.f, // top left
+    };
 
-    unsigned int VBO, VAO;
+    unsigned int indices[] = {
+        0, 1, 3, // first triangle
+        1, 2, 3  // second triangle
+    };
+
+    unsigned int VBO, VAO, EBO;
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
+    glGenBuffers(1, &EBO);
 
     // bind vertex array object (VAO)
     // then bind and set vertex buffers
@@ -191,6 +202,10 @@ int main() {
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+                 GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
                           (void *)0);
@@ -201,6 +216,8 @@ int main() {
 
     // you can unbind also VAO but, as per VBO, it is not necessary
     glBindVertexArray(0);
+
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     // render loop
     while (!glfwWindowShouldClose(window)) {
@@ -214,7 +231,7 @@ int main() {
         // with only one VAO it is not necessary to bind it every time
         // but I'll do it for organization
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -223,6 +240,7 @@ int main() {
     // de-allocate all resources
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
     glDeleteProgram(shaderProgram);
 
     glfwTerminate();
