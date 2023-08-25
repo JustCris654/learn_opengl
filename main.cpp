@@ -15,12 +15,20 @@ const char *vertexShaderSource =
     "{\n"
     "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
     "}\0";
-const char *fragmentShaderSource =
+const char *orangeFragmentShaderSource =
     "#version 330 core\n"
     "out vec4 FragColor;\n"
     "void main()\n"
     "{\n"
     "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    "}\n\0";
+
+const char *yellowFragmentShaderSource =
+    "#version 330 core\n"
+    "out vec4 FragColor;\n"
+    "void main()\n"
+    "{\n"
+    "   FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
     "}\n\0";
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
@@ -89,14 +97,22 @@ int main() {
         compileShader(GL_VERTEX_SHADER, vertexShaderSource, "VERTEX");
 
     // fragment shader
-    unsigned int fragmentShader =
-        compileShader(GL_FRAGMENT_SHADER, fragmentShaderSource, "FRAGMENT");
+    unsigned int orangeFragmentShader = compileShader(
+        GL_FRAGMENT_SHADER, orangeFragmentShaderSource, "ORANGE_FRAGMENT");
+
+    unsigned int yellowFragmentShader = compileShader(
+        GL_FRAGMENT_SHADER, yellowFragmentShaderSource, "YELLOW_FRAGMENT");
 
     // link shaders
     unsigned int shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
+    glAttachShader(shaderProgram, orangeFragmentShader);
     glLinkProgram(shaderProgram);
+
+    unsigned int yellowProgram = glCreateProgram();
+    glAttachShader(yellowProgram, vertexShader);
+    glAttachShader(yellowProgram, yellowFragmentShader);
+    glLinkProgram(yellowProgram);
 
     // check for linking errors
     int success;
@@ -110,7 +126,7 @@ int main() {
 
     // delete shaders
     glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    glDeleteShader(orangeFragmentShader);
 
     // set up vertex data
     // buffer data
@@ -123,36 +139,42 @@ int main() {
     //     -0.5f, 0.5f,  0.f, // top left
     // };
 
-    float vertices[] = {
-        -1.f, 0.f,  0.f, // mid left angle
-        -1.f, 1.f,  0.f, // top left
-        0.f,  0.f,  0.f, // mid
-        1.f,  0.f,  0.f, // bottom mid
-        1.f,  -1.f, 0.f, // right bottom
+    float first_triangle_vertices[] = {
+        -1.f, 0.f, 0.f, // mid left angle
+        -1.f, 1.f, 0.f, // top left
+        0.f,  0.f, 0.f, // mid
     };
 
-    unsigned int indices[] = {
-        0, 1, 2, // first triangle
-        2, 3, 4  // second triangle
+    float second_triangle_vertices[] = {
+        0.f, 0.f,  0.f, // mid
+        1.f, 0.f,  0.f, // bottom mid
+        1.f, -1.f, 0.f, // right bottom
     };
 
-    unsigned int VBO, VAO, EBO;
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
+    unsigned int VBOs[2], VAOs[2];
+    glGenVertexArrays(2, VAOs);
+    glGenBuffers(2, VBOs);
 
     // bind vertex array object (VAO)
     // then bind and set vertex buffers
     // and then configure vertex attributes
-    glBindVertexArray(VAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    // setup firts triangle
+    glBindVertexArray(VAOs[0]);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-                 GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, VBOs[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(first_triangle_vertices),
+                 first_triangle_vertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+                          (void *)0);
+    glEnableVertexAttribArray(0);
 
+    // setup second triangle
+    glBindVertexArray(VAOs[1]);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(second_triangle_vertices),
+                 second_triangle_vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
                           (void *)0);
     glEnableVertexAttribArray(0);
@@ -176,8 +198,12 @@ int main() {
         glUseProgram(shaderProgram);
         // with only one VAO it is not necessary to bind it every time
         // but I'll do it for organization
-        glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        glBindVertexArray(VAOs[0]);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        glUseProgram(yellowProgram);
+        glBindVertexArray(VAOs[1]);
+        glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glBindVertexArray(0);
 
@@ -186,9 +212,8 @@ int main() {
     }
 
     // de-allocate all resources
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
+    glDeleteVertexArrays(2, VAOs);
+    glDeleteBuffers(1, VBOs);
     glDeleteProgram(shaderProgram);
 
     glfwTerminate();
