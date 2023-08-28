@@ -22,14 +22,6 @@ std::string loadShaderAsString(const std::string *filename) {
     }
 
     return source;
-
-    // if (file.is_open()) {
-    //     std::string line;
-    //     while (std::getline(file, line)) {
-    //         source += line + '\n';
-    //     }
-    //     file.close();
-    // }
 }
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
@@ -73,9 +65,6 @@ int main() {
         "/home/justcris/Documents/cpp/opengl_conan/shaders/frag_shader.glsl");
     std::string vertexShaderSource = loadShaderAsString(&vertexFilename);
     std::string fragmentShaderSource = loadShaderAsString(&fragmentFilename);
-
-    std::cout << vertexShaderSource << std::endl;
-    std::cout << fragmentShaderSource << std::endl;
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -177,6 +166,12 @@ int main() {
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+
+        float timeValue = glfwGetTime();
+        float greenValue = (std::sin(timeValue) / 2.f) + 0.5f;
+        int vertexColorLocation =
+            glGetUniformLocation(shaderProgram, "ourColor");
+        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
         // draw our triangle
         glUseProgram(shaderProgram);
