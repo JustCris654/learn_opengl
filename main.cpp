@@ -1,35 +1,36 @@
 #include <assert.h>
+#include <fstream>
 #include <iostream>
 
 #include <glad/glad.h>
 
 #include <GLFW/glfw3.h>
+#include <iterator>
+#include <string>
 
 const int WINDOW_WIDTH = 1920;
 const int WINDOW_HEIGHT = 1080;
 
-const char *vertexShaderSource =
-    "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "}\0";
-const char *orangeFragmentShaderSource =
-    "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-    "}\n\0";
+std::string loadShaderAsString(const std::string *filename) {
+    std::string source("");
+    std::string line;
 
-const char *yellowFragmentShaderSource =
-    "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
-    "}\n\0";
+    std::ifstream file(filename->c_str(), std::fstream::in);
+    if (file.is_open()) {
+        source = std::string(std::istreambuf_iterator<char>(file),
+                             std::istreambuf_iterator<char>());
+    }
+
+    return source;
+
+    // if (file.is_open()) {
+    //     std::string line;
+    //     while (std::getline(file, line)) {
+    //         source += line + '\n';
+    //     }
+    //     file.close();
+    // }
+}
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -66,6 +67,16 @@ unsigned int compileShader(GLenum shaderType, const char *shaderSource,
 }
 
 int main() {
+    const std::string vertexFilename(
+        "/home/justcris/Documents/cpp/opengl_conan/shaders/vertex_shader.glsl");
+    const std::string fragmentFilename(
+        "/home/justcris/Documents/cpp/opengl_conan/shaders/frag_shader.glsl");
+    std::string vertexShaderSource = loadShaderAsString(&vertexFilename);
+    std::string fragmentShaderSource = loadShaderAsString(&fragmentFilename);
+
+    std::cout << vertexShaderSource << std::endl;
+    std::cout << fragmentShaderSource << std::endl;
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -79,6 +90,7 @@ int main() {
 
         return -1;
     }
+    int nrAttributes;
 
     glfwMakeContextCurrent(window);
 
@@ -90,29 +102,25 @@ int main() {
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &nrAttributes);
+    std::cout << "Maximum nr of vertex attributes supported: " << nrAttributes
+              << std::endl;
+
     // build and compile shader program
     // ----------------------------------------
     // vertex shader
     unsigned int vertexShader =
-        compileShader(GL_VERTEX_SHADER, vertexShaderSource, "VERTEX");
+        compileShader(GL_VERTEX_SHADER, vertexShaderSource.c_str(), "VERTEX");
 
     // fragment shader
     unsigned int orangeFragmentShader = compileShader(
-        GL_FRAGMENT_SHADER, orangeFragmentShaderSource, "ORANGE_FRAGMENT");
-
-    unsigned int yellowFragmentShader = compileShader(
-        GL_FRAGMENT_SHADER, yellowFragmentShaderSource, "YELLOW_FRAGMENT");
+        GL_FRAGMENT_SHADER, fragmentShaderSource.c_str(), "ORANGE_FRAGMENT");
 
     // link shaders
     unsigned int shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, orangeFragmentShader);
     glLinkProgram(shaderProgram);
-
-    unsigned int yellowProgram = glCreateProgram();
-    glAttachShader(yellowProgram, vertexShader);
-    glAttachShader(yellowProgram, yellowFragmentShader);
-    glLinkProgram(yellowProgram);
 
     // check for linking errors
     int success;
@@ -132,49 +140,25 @@ int main() {
     // buffer data
     // configure vertex attributes
 
-    // float vertices[] = {
-    //     0.5f,  0.5f,  0.f, // top right
-    //     0.5f,  -0.5f, 0.f, // bottom right
-    //     -0.5f, -0.5f, 0.f, // bottom left
-    //     -0.5f, 0.5f,  0.f, // top left
-    // };
-
-    float first_triangle_vertices[] = {
-        -1.f, 0.f, 0.f, // mid left angle
-        -1.f, 1.f, 0.f, // top left
-        0.f,  0.f, 0.f, // mid
+    float vertices[] = {
+        0.0f, 0.5f, 0.0f, // top
+        -.5f, -.5f, 0.0f, // bottom left
+        0.5f, -.5f, 0.0f, // bottom right
     };
 
-    float second_triangle_vertices[] = {
-        0.f, 0.f,  0.f, // mid
-        1.f, 0.f,  0.f, // bottom mid
-        1.f, -1.f, 0.f, // right bottom
-    };
-
-    unsigned int VBOs[2], VAOs[2];
-    glGenVertexArrays(2, VAOs);
-    glGenBuffers(2, VBOs);
+    unsigned int VBO, VAO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
 
     // bind vertex array object (VAO)
     // then bind and set vertex buffers
     // and then configure vertex attributes
 
     // setup firts triangle
-    glBindVertexArray(VAOs[0]);
+    glBindVertexArray(VAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBOs[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(first_triangle_vertices),
-                 first_triangle_vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
-                          (void *)0);
-    glEnableVertexAttribArray(0);
-
-    // setup second triangle
-    glBindVertexArray(VAOs[1]);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(second_triangle_vertices),
-                 second_triangle_vertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
                           (void *)0);
     glEnableVertexAttribArray(0);
@@ -198,11 +182,7 @@ int main() {
         glUseProgram(shaderProgram);
         // with only one VAO it is not necessary to bind it every time
         // but I'll do it for organization
-        glBindVertexArray(VAOs[0]);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
-        glUseProgram(yellowProgram);
-        glBindVertexArray(VAOs[1]);
+        glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glBindVertexArray(0);
@@ -212,8 +192,8 @@ int main() {
     }
 
     // de-allocate all resources
-    glDeleteVertexArrays(2, VAOs);
-    glDeleteBuffers(1, VBOs);
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
     glDeleteProgram(shaderProgram);
 
     glfwTerminate();
