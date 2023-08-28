@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <cmath>
 #include <fstream>
 #include <iostream>
 
@@ -102,13 +103,13 @@ int main() {
         compileShader(GL_VERTEX_SHADER, vertexShaderSource.c_str(), "VERTEX");
 
     // fragment shader
-    unsigned int orangeFragmentShader = compileShader(
-        GL_FRAGMENT_SHADER, fragmentShaderSource.c_str(), "ORANGE_FRAGMENT");
+    unsigned int fragmentShader = compileShader(
+        GL_FRAGMENT_SHADER, fragmentShaderSource.c_str(), "FRAGMENT");
 
     // link shaders
     unsigned int shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, orangeFragmentShader);
+    glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
 
     // check for linking errors
@@ -123,16 +124,17 @@ int main() {
 
     // delete shaders
     glDeleteShader(vertexShader);
-    glDeleteShader(orangeFragmentShader);
+    glDeleteShader(fragmentShader);
 
     // set up vertex data
     // buffer data
     // configure vertex attributes
 
     float vertices[] = {
-        0.0f, 0.5f, 0.0f, // top
-        -.5f, -.5f, 0.0f, // bottom left
-        0.5f, -.5f, 0.0f, // bottom right
+        // positions      // colors
+        0.0f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, // top
+        -.5f, -.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
+        0.5f, -.5f, 0.0f, 0.0f, 0.0f, 1.0f  // bottom right
     };
 
     unsigned int VBO, VAO;
@@ -148,9 +150,13 @@ int main() {
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
                           (void *)0);
     glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                          (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     // unbind buffer
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -167,11 +173,11 @@ int main() {
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        float timeValue = glfwGetTime();
-        float greenValue = (std::sin(timeValue) / 2.f) + 0.5f;
-        int vertexColorLocation =
-            glGetUniformLocation(shaderProgram, "ourColor");
-        glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+        // float timeValue = glfwGetTime();
+        // float greenValue = (std::sin(timeValue) / 2.f) + 0.5f;
+        // int vertexColorLocation =
+        //     glGetUniformLocation(shaderProgram, "ourColor");
+        // glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
         // draw our triangle
         glUseProgram(shaderProgram);
