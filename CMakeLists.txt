@@ -18,6 +18,8 @@ set(glad_DIR build/)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 
+add_subdirectory(libs/shader)
+
 include_directories(
     ${PROJECT_SOURCE_DIR}
     ${PROJECT_BINARY_DIR}
@@ -28,4 +30,9 @@ find_package(glfw3 REQUIRED)
 find_package(glad REQUIRED)
 
 add_executable(${PROJECT_NAME} main.cpp)
+
+target_include_directories(${PROJECT_NAME} PRIVATE libs/shader)
+
+target_link_libraries(${PROJECT_NAME} shader)
+
 target_link_libraries(${PROJECT_NAME} glfw glad::glad)
