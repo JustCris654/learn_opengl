@@ -1,29 +1,17 @@
+#include <glad/glad.h>
+
+#include <GLFW/glfw3.h>
 #include <assert.h>
 #include <cmath>
 #include <fstream>
 #include <iostream>
-
-#include <glad/glad.h>
-
-#include <GLFW/glfw3.h>
 #include <iterator>
 #include <string>
 
+#include "Shader.hpp"
+
 const int WINDOW_WIDTH = 1920;
 const int WINDOW_HEIGHT = 1080;
-
-std::string loadShaderAsString(const std::string *filename) {
-    std::string source("");
-    std::string line;
-
-    std::ifstream file(filename->c_str(), std::fstream::in);
-    if (file.is_open()) {
-        source = std::string(std::istreambuf_iterator<char>(file),
-                             std::istreambuf_iterator<char>());
-    }
-
-    return source;
-}
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
@@ -35,37 +23,7 @@ void processInput(GLFWwindow *window) {
     }
 }
 
-unsigned int compileShader(GLenum, const char *, std::string name);
-
-unsigned int compileShader(GLenum shaderType, const char *shaderSource,
-                           std::string name) {
-    // compoile shader
-    unsigned int shader = glCreateShader(shaderType);
-    glShaderSource(shader, 1, &shaderSource, nullptr);
-    glCompileShader(shader);
-
-    // check for shader compiler error
-    int success;
-    char infoLog[512];
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(shader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::" << name << "::COMPILATION_FAILED\n"
-                  << infoLog << std::endl;
-
-        assert(false);
-    }
-
-    return shader;
-}
-
 int main() {
-    const std::string vertexFilename(
-        "/home/justcris/Documents/cpp/opengl_conan/shaders/vertex_shader.glsl");
-    const std::string fragmentFilename(
-        "/home/justcris/Documents/cpp/opengl_conan/shaders/frag_shader.glsl");
-    std::string vertexShaderSource = loadShaderAsString(&vertexFilename);
-    std::string fragmentShaderSource = loadShaderAsString(&fragmentFilename);
 
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -99,32 +57,12 @@ int main() {
     // build and compile shader program
     // ----------------------------------------
     // vertex shader
-    unsigned int vertexShader =
-        compileShader(GL_VERTEX_SHADER, vertexShaderSource.c_str(), "VERTEX");
+    const std::string vertexFilename(
+        "/home/justcris/Documents/cpp/opengl_conan/shaders/vertex_shader.glsl");
+    const std::string fragmentFilename(
+        "/home/justcris/Documents/cpp/opengl_conan/shaders/frag_shader.glsl");
 
-    // fragment shader
-    unsigned int fragmentShader = compileShader(
-        GL_FRAGMENT_SHADER, fragmentShaderSource.c_str(), "FRAGMENT");
-
-    // link shaders
-    unsigned int shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    // check for linking errors
-    int success;
-    char infoLog[512];
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
-                  << infoLog << std::endl;
-    }
-
-    // delete shaders
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    Shader shaders(vertexFilename.c_str(), fragmentFilename.c_str());
 
     // set up vertex data
     // buffer data
@@ -180,7 +118,8 @@ int main() {
         // glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
         // draw our triangle
-        glUseProgram(shaderProgram);
+        shaders.use();
+        shaders.set("offSet", 0.5f);
         // with only one VAO it is not necessary to bind it every time
         // but I'll do it for organization
         glBindVertexArray(VAO);
@@ -195,7 +134,6 @@ int main() {
     // de-allocate all resources
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shaderProgram);
 
     glfwTerminate();
     return 0;

@@ -3,14 +3,16 @@
 
 #include <glad/glad.h>
 
+#include <cassert>
 #include <fstream>
-#include <string>
 #include <iostream>
+#include <string>
 
 class Shader {
   public:
     // constructor reads and builds the shader
     Shader(const char *vertexPath, const char *fragmentPath);
+    ~Shader();
 
   public:
     void use(); // use/activate shader
@@ -21,9 +23,10 @@ class Shader {
 
   private:
     std::string loadShaderAsString(const char *filename);
+    unsigned int compileShader(GLenum shaderType, const char *shaderSource,
+                               std::string name);
 
-  public:
+  private:
     unsigned int ID; // program ID
 };
-
 #endif
