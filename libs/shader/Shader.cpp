@@ -5,7 +5,6 @@ std::string Shader::loadShaderAsString(const char *filename) {
     std::string line;
 
     std::ifstream file(filename, std::fstream::in);
-    std::cout << "File " << filename <<"  is open: " << file.is_open() << std::endl;
     if (file.is_open()) {
         source = std::string(std::istreambuf_iterator<char>(file),
                              std::istreambuf_iterator<char>());
@@ -99,6 +98,5 @@ void Shader::set(const std::string &name, int value) const {
     glUniform1i(glGetUniformLocation(this->ID, name.c_str()), value);
 }
 void Shader::set(const std::string &name, float value) const {
-    std::cout << "Set float uniform " << name << std::endl;
     glUniform1f(glGetUniformLocation(this->ID, name.c_str()), value);
 }

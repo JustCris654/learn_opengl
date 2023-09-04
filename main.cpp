@@ -62,7 +62,7 @@ int main() {
     const std::string fragmentFilename(
         "/home/justcris/Documents/cpp/opengl_conan/shaders/frag_shader.glsl");
 
-    Shader shaders(vertexFilename.c_str(), fragmentFilename.c_str());
+    Shader *shaders = new Shader(vertexFilename.c_str(), fragmentFilename.c_str());
 
     // set up vertex data
     // buffer data
@@ -118,8 +118,8 @@ int main() {
         // glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
         // draw our triangle
-        shaders.use();
-        shaders.set("offSet", 0.5f);
+        shaders->use();
+        shaders->set("offSet", 0.2f);
         // with only one VAO it is not necessary to bind it every time
         // but I'll do it for organization
         glBindVertexArray(VAO);
@@ -134,6 +134,7 @@ int main() {
     // de-allocate all resources
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
+    delete shaders;
 
     glfwTerminate();
     return 0;
